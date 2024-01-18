@@ -1,0 +1,7 @@
+data:
+ value1: 0.126371231
+ nested:
+  check: true
+  value2: 0.627111217
+  value3: 0.000012341
+text: some story to tell
