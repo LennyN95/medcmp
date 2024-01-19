@@ -1,15 +1,47 @@
+# Specify the base image for the environment
 FROM ubuntu:20.04
 
-# install dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+# Authors of the image
+LABEL authors="lnuernberg@bwh.harvard.edu"
 
-# install python dependencies
+# Remove any third-party apt sources to avoid issues with expiring keys.
+RUN rm -f /etc/apt/sources.list.d/*.list
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Amsterdam
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Create a working directory and set it as the working directory
+RUN mkdir /app /app/data
+WORKDIR /app
+
+# Install system utilities and useful packages
+RUN apt update && apt install -y --no-install-recommends \  
+  wget \
+  curl \
+  jq \
+  gcc \
+  unzip \
+  sudo \
+  git \
+  python3 \
+  python3-pip
+
+# Install system dependencies
+RUN apt update && apt install -y --no-install-recommends \
+  plastimatch \
+  && rm -rf /var/lib/apt/lists/* 
+
+# Install Python dependencies
+RUN pip3 install --upgrade pip && pip3 install --no-cache-dir \
+  typing-extensions \
+  numpy \
+  pandas \ 
+  PyYAML \
+  pyplastimatch \
+  SimpleITK==2.2.1
 
 # copy source code
-COPY . /app
+COPY ./src /app/src
 
-# set working directory
-WORKDIR /app
+ENTRYPOINT ["python3", "/app/src/main.py"]

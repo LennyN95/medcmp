@@ -1,6 +1,6 @@
-
 import os, hashlib
 from enum import Enum
+from Report import Report
 
 class FileType(Enum):
   RAW = "raw"
@@ -56,6 +56,39 @@ def scan_tree(base: str):
   return items
 
 
+def compare_tree_structures(src: str, ref: str, report: Report):
+  """
+  Compare two directories.
+  """
+
+  # scan directories
+  src_items = scan_tree(src)
+  ref_items = scan_tree(ref)
+
+  # collect items that are in src and ref and will be compared on a content level
+  comparable_files = []
+
+  # compare each item
+  for relpath, src_item in src_items.items():
+
+    # note extra files
+    if relpath not in ref_items:
+      report.files_extra.append(relpath)
+      continue
+
+    # files are present in src and ref and can be noted for content check
+    comparable_files.append(relpath)
+
+  # check for extra files
+  for relpath in ref_items:
+
+    # note missing files
+    if relpath not in src_items:
+      report.files_missing.append(relpath)
+
+  # return report
+  return comparable_files
+
 # test
 if __name__ == "__main__":
 
@@ -109,14 +142,11 @@ if __name__ == "__main__":
       continue
 
     # compare file content
-    with open(src_item.path, "rb") as src_file:
-      with open(ref_item.path, "rb") as ref_file:
-        src_content = src_file.read()
-        ref_content = ref_file.read()
+    ext = os.path.splitext(src_item.name)[1]
 
-        if src_content != ref_content:
-          print("content mismatch")
-          continue
+    if ext == ".json" or ext == ".yml":
+      compare_data(src_item.path, ref_item.path)
 
+    elif ext == ".nii.gz" or ext == ".nrrd" or ext == ".mha" or ext == ".mhd":
+      compare_images(src_item.path, ref_item.path)
 
-    print("")

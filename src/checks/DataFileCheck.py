@@ -1,8 +1,10 @@
+from .FileCompare import FileCheck
 from typing import Union
 from enum import Enum
-import math, sys
+import math, sys, yaml, json
 
 class ComparisonOutcome(Enum):
+  UNDEFINED = "undefined"
   MISSING = "missing"
   EXTRA = "extra"
   TYPE_MISMATCH = "type_mismatch"
@@ -13,11 +15,11 @@ class ComparisonOutcome(Enum):
 
 class ComparisonItem: 
   path: str
+  type: str = None
   src_value: any = None
   ref_value: any = None
-  outcome: ComparisonOutcome = None
+  outcome: ComparisonOutcome = ComparisonOutcome.UNDEFINED
   precision: tuple = None
-
 
 def get_data(file_path: str):
   """
@@ -26,14 +28,11 @@ def get_data(file_path: str):
 
   # check file type
   if file_path.endswith(".json"):
-    import json
     with open(file_path, "r") as f:
       data = json.load(f)
   elif file_path.endswith(".yml") or file_path.endswith(".yaml"):
-    raise Exception("YAML not supported yet.")
-    # import yaml
-    # with open(file_path, "r") as f:
-    #   data = yaml.load(f, Loader=yaml.FullLoader)
+    with open(file_path, "r") as f:
+      data = yaml.load(f, Loader=yaml.FullLoader)
   else:
     raise Exception(f"Unknown file type: {file_path}")
   
@@ -87,20 +86,9 @@ def get_value(d, path):
   
   return d
 
-def precision_and_scale(x):
-    # https://stackoverflow.com/questions/3018758/determine-precision-and-scale-of-particular-number-in-python
-    max_digits = sys.float_info.dig
-    int_part = int(abs(x))
-    magnitude = 1 if int_part == 0 else int(math.log10(int_part)) + 1
-    if magnitude >= max_digits:
-        return (magnitude, 0)
-    frac_part = abs(x) - int_part
-    multiplier = 10 ** (max_digits - magnitude)
-    frac_digits = multiplier + int(multiplier * frac_part + 0.5)
-    while frac_digits % 10 == 0:
-        frac_digits /= 10
-    scale = int(math.log10(frac_digits))
-    return (magnitude + scale, scale)
+def round_down(value, decimals):
+    factor = 1 / (10 ** decimals)
+    return (value // factor) * factor
 
 def compare_numbers(v1: Union[int, float], v2: Union[int, float], verbose: bool = False):
 
@@ -118,11 +106,11 @@ def compare_numbers(v1: Union[int, float], v2: Union[int, float], verbose: bool 
     return False, -1, -1
 
   # scale matching (for int and float)
-  matching_scale = -1
+  matching_scale = 1
   if math.log10(v1) >= 0:
     for i in range(int(math.log10(v1)) + 1):
-      if round(v1 / 10**i) == round(v2 / 10**i):
-        if verbose: print("B] v1 (",v1,") and v2 (",v2,") sclae", int(math.log10(v1)) + 1, "match at scale", 10**i)
+      if int(v1 / 10**i) == int(v2 / 10**i):
+        if verbose: print("B] v1 (", int(v1 / 10**i) ,") and v2 (", int(v2 / 10**i) ,") scale", int(math.log10(v1)) + 1, "match at scale", 10**i)
         matching_scale = 10**i
         break
 
@@ -130,13 +118,12 @@ def compare_numbers(v1: Union[int, float], v2: Union[int, float], verbose: bool 
   matching_precision = -1
   if isinstance(v1, float):
     for precision in range(sys.float_info.dig):
-      if round(v1, precision) == round(v2, precision):
-        if verbose:  print("C] v1 (",v1,") and v2 (",v2,") match at precision", precision, "(", round(v1, precision), "-", round(v2, precision), ")")
+      if round_down(v1, precision) == round_down(v2, precision):
+        if verbose:  print("C] v1 (",v1,") and v2 (",v2,") match at precision", precision, "(", round_down(v1, precision), "-", round_down(v2, precision), ")")
         matching_precision = precision
 
   # report results
   return False, matching_scale, matching_precision
-
 
 def check_item(item: ComparisonItem):
 
@@ -145,7 +132,11 @@ def check_item(item: ComparisonItem):
 
   # check type
   if type(v1) != type(v2):
-    item.outcome =  ComparisonOutcome.TYPE_MISMATCH
+    item.outcome = ComparisonOutcome.TYPE_MISMATCH
+    return 
+  
+  # set type
+  item.type = type(v1).__name__
 
   # check boolean values
   if isinstance(v1, bool):
@@ -153,6 +144,8 @@ def check_item(item: ComparisonItem):
       item.outcome =  ComparisonOutcome.VALUE_MISMATCH
     else:
       item.outcome =  ComparisonOutcome.VALUE_EXACT
+
+    return
     
   # cehck string values
   if isinstance(v1, str):
@@ -161,9 +154,11 @@ def check_item(item: ComparisonItem):
     else:
       item.outcome = ComparisonOutcome.VALUE_EXACT
 
+    return
+
   # if numeric, check various precisions
   if (isinstance(v1, int) or isinstance(v1, float)) and not isinstance(v1, bool):
-    match, scale, precision = compare_numbers(v1, v2)
+    match, scale, precision = compare_numbers(v1, v2, verbose=False)
     print("compare numbers", v1, "with", v2, " -> ", match, scale, precision)
 
     if match:
@@ -174,65 +169,75 @@ def check_item(item: ComparisonItem):
     else:
       item.outcome = ComparisonOutcome.VALUE_MISMATCH
 
-  # check exact
-  return ComparisonOutcome.VALUE_EXACT
+class DataFileCheck(FileCheck):
 
-def compare_data(src_file: str, ref_file: str):
-  """
-  Compare two json / yml files.
-  - travel through all keys
-  - identify missing key paths
-  - identify extra key paths
-  - compare values
-  - for not exactly matching values try various precisions and report the best match
-  """
+  def can_check(self):
+    return self.src_path.endswith(".json") \
+        or self.src_path.endswith(".yml")
 
-  # read files
-  src_data = get_data(src_file)
-  ref_data = get_data(ref_file)
+  def check(self):
+    """
+    Compare two json / yml files.
+    - travel through all keys
+    - identify missing key paths
+    - identify extra key paths
+    - compare values
+    - for not exactly matching values try various precisions and report the best match
+    """
 
-  # compare data
-  src_paths = scan_data_paths(src_data)
-  ref_paths = scan_data_paths(ref_data)
+    # read files
+    src_data = get_data(self.src_path)
+    ref_data = get_data(self.ref_path)
 
-  # convert to compare items
-  items = []
+    # compare data
+    src_paths = scan_data_paths(src_data)
+    ref_paths = scan_data_paths(ref_data)
 
-  for p in src_paths:
-    item = ComparisonItem()
-    items.append(item)
-    item.path = p
-    
-    # check if path is in ref or if path is an extra path
-    if not p in ref_paths:
-      item.outcome = ComparisonOutcome.EXTRA
-      continue
+    # convert to compare items
+    items = []
 
-    # remove ref paths that are already matched
-    ref_paths.remove(p)
+    for p in src_paths:
+      item = ComparisonItem()
+      items.append(item)
+      item.path = p
+      
+      # check if path is in ref or if path is an extra path
+      if not p in ref_paths:
+        item.outcome = ComparisonOutcome.EXTRA
+        continue
 
-    # get values
-    item.src_value = get_value(src_data, p)
-    item.ref_value = get_value(ref_data, p)
+      # remove ref paths that are already matched
+      ref_paths.remove(p)
 
-    # compare values
-    check_item(item)
+      # get values
+      item.src_value = get_value(src_data, p)
+      item.ref_value = get_value(ref_data, p)
 
-  # all remaining ref paths are missing
-  for p in ref_paths:
-    item = ComparisonItem()
-    item.path = p
-    item.outcome = ComparisonOutcome.MISSING
-    items.append(item)
+      # compare values
+      check_item(item)
 
-  # print d1 scan results
-  print("\n\nscan results:")
-  for item in items:
-    print(item.path, item.outcome, item.src_value, item.ref_value, item.precision)
+    # all remaining ref paths are missing
+    for p in ref_paths:
+      item = ComparisonItem()
+      item.path = p
+      item.outcome = ComparisonOutcome.MISSING
+      items.append(item)
+
+    # conclusion
+    for item in items:
+      if item.outcome != ComparisonOutcome.VALUE_EXACT:
+        return False
+    return True
 
 
-# test
-if __name__ == "__main__":
 
-  # compare two files
-  compare_data("test/src/deep/more.json", "test/ref/deep/more.json")
+
+
+
+
+
+
+
+
+
+
