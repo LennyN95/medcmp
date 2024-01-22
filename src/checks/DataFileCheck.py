@@ -223,11 +223,29 @@ class DataFileCheck(FileCheck):
       item.outcome = ComparisonOutcome.MISSING
       items.append(item)
 
+    # wheather check passed or failes
+    check_passed = True
+
     # conclusion
     for item in items:
+
+      # add facts to report for each item outcome
+      if item.outcome == ComparisonOutcome.MISSING:
+        self.fact("Missing key", f"Key '{item.path}' is missing in source file", None, subpath=item.path)
+      elif item.outcome == ComparisonOutcome.EXTRA:
+        self.fact("Extra key", f"Key '{item.path}' is extra in source file", None, subpath=item.path)
+      elif item.outcome == ComparisonOutcome.TYPE_MISMATCH:
+        self.fact("Type mismatch", f"Type of key '{item.path}' is different in source file", None, subpath=item.path)
+      elif item.outcome == ComparisonOutcome.VALUE_MISMATCH:
+        self.fact("Value mismatch", f"Value of key '{item.path}' is different in source file", None, subpath=item.path)
+      elif item.outcome == ComparisonOutcome.VALUE_SIMILAR:
+        self.fact("Value similar", f"Value of key '{item.path}' is similar in source file", item.precision, subpath=item.path)
+
       if item.outcome != ComparisonOutcome.VALUE_EXACT:
-        return False
-    return True
+        check_passed = False
+
+    # return check passed result
+    return check_passed
 
 
 

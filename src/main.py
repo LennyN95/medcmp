@@ -1,4 +1,4 @@
-from Report import Report
+from Report import Report, ReportConsolePrint
 from scan import compare_tree_structures
 from checks.FileCompare import FileCompare
 from checks.DataFileCheck import DataFileCheck
@@ -19,7 +19,7 @@ def compare(src: str, ref: str, report: Report = None, verbose: bool = False):
   comparable_files = compare_tree_structures(src, ref, report)
 
   # compare files 
-  file_checker = FileCompare()
+  file_checker = FileCompare(report)
   file_checker.register(DataFileCheck)
   file_checker.register(ImageFileCheck)
 
@@ -40,3 +40,6 @@ if __name__ == "__main__":
 
   # compare
   report = compare(src_path, ref_path)
+
+  # print report
+  ReportConsolePrint(report).print()
