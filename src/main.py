@@ -4,6 +4,7 @@ from checks.FileCompare import FileCompare
 from checks.DataFileCheck import DataFileCheck
 from checks.ImageFileCheck import ImageFileCheck
 from checks.SizeCheck import SizeCheck
+from checks.DicomsegContentCheck import DicomsegContentCheck
 import sys, os
 
 
@@ -24,6 +25,7 @@ def compare(src: str, ref: str, report: Report = None, verbose: bool = False):
   file_checker.register(DataFileCheck)
   file_checker.register(ImageFileCheck)
   file_checker.register(SizeCheck)
+  file_checker.register(DicomsegContentCheck)
 
   for relpath in comparable_files:
     src_path = os.path.join(src, relpath)
