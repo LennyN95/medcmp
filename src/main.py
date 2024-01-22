@@ -3,6 +3,7 @@ from scan import compare_tree_structures
 from checks.FileCompare import FileCompare
 from checks.DataFileCheck import DataFileCheck
 from checks.ImageFileCheck import ImageFileCheck
+from checks.SizeCheck import SizeCheck
 import sys, os
 
 
@@ -22,6 +23,7 @@ def compare(src: str, ref: str, report: Report = None, verbose: bool = False):
   file_checker = FileCompare(report)
   file_checker.register(DataFileCheck)
   file_checker.register(ImageFileCheck)
+  file_checker.register(SizeCheck)
 
   for relpath in comparable_files:
     src_path = os.path.join(src, relpath)
@@ -35,8 +37,8 @@ def compare(src: str, ref: str, report: Report = None, verbose: bool = False):
 
 if __name__ == "__main__":
 
-  src_path = "test/src"
-  ref_path = "test/ref"
+  src_path = "/app/test/src"
+  ref_path = "/app/test/ref"
 
   # compare
   report = compare(src_path, ref_path)

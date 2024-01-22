@@ -1,14 +1,6 @@
 from .FileCompare import FileCheck
-from Report import ReportEntry, ReportEntryFact
 import pyplastimatch as pypla 
 import numpy as np
-
-class ImageDiceScoreFact(ReportEntryFact):
-  label: "Dice Score"
-  description: "Dice score between reference and test image"
-
-  def __init__(self, value: float):
-    super().__init__(value)
 
 class ImageFileCheck(FileCheck):
 
