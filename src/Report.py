@@ -76,29 +76,29 @@ class ReportYamlExport:
 
     # add missing files
     if len(self.report.files_missing) > 0:
-      data["files_missing"] = self.report.files_missing
+      data["missing_files"] = self.report.files_missing
 
     # add extra files
     if len(self.report.files_extra) > 0:
-      data["files_extra"] = self.report.files_extra
+      data["extra_files"] = self.report.files_extra
 
     # add all findings
     if len(self.report.findings) > 0:
-      data["findings"] = []
+      data["checked_files"] = []
       for finding in self.report.findings:
         item = {}
         item["path"] = finding.path
         item["checker"] = finding.checker
-        item["meta"] = finding.meta
-        item["facts"] = []
+        #item["meta"] = finding.meta
+        item["findings"] = []
         for fact in finding.facts:
           fact_item = {}
           fact_item["subpath"] = fact.subpath
           fact_item["label"] = fact.label
           fact_item["description"] = fact.description
           fact_item["value"] = fact.value
-          item["facts"].append(fact_item)
-        data["findings"].append(item)
+          item["findings"].append(fact_item)
+        data["checked_files"].append(item)
   
     # write yaml file
     with open(path, "w") as f:
