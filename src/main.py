@@ -1,4 +1,4 @@
-from Report import Report, ReportConsolePrint
+from Report import Report, ReportConsolePrint, ReportYamlExport
 from scan import compare_tree_structures
 from checks.FileCompare import FileCompare
 from checks.DataFileCheck import DataFileCheck
@@ -41,9 +41,13 @@ if __name__ == "__main__":
 
   src_path = "/app/test/src"
   ref_path = "/app/test/ref"
+  report_path = "/app/report.yml"
 
   # compare
   report = compare(src_path, ref_path)
 
   # print report
   ReportConsolePrint(report).print()
+
+  # export report
+  ReportYamlExport(report).export(report_path)

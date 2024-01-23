@@ -1,3 +1,5 @@
+import yaml
+
 class Report:
   files_missing = []        # files missing in src
   files_extra = []          # files missing in ref
@@ -54,22 +56,6 @@ class ReportConsolePrint:
       for extra_path in self.report.files_extra:
         print(f"  {extra_path}")
 
-    # print different files
-    # if len(self.report.files_different) > 0:
-    #   print("Files different from reference:")
-    #   for diff_path in self.report.files_different:
-    #     print(f"  {diff_path}")
-
-    # print details about different files
-    # if len(self.report.files_different) > 0:
-    #   print("Details about files different from reference:")
-    #   for item in self.report.files_different:
-    #     print(f"  {item.path}")
-    #     print(f"    src: {item.src_value}")
-    #     print(f"    ref: {item.ref_value}")
-    #     print(f"    outcome: {item.outcome}")
-    #     print(f"    precision: {item.precision}")
-
     # print all findings
     if len(self.report.findings) > 0:
       print("All findings:")
@@ -80,6 +66,40 @@ class ReportConsolePrint:
         for fact in finding.facts:
           print(f"    {fact.subpath} {fact.label}: {fact.value}")
 
+class ReportYamlExport:
 
+  def __init__(self, report: Report):
+    self.report = report
 
+  def export(self, path: str):
+    data = {}
+
+    # add missing files
+    if len(self.report.files_missing) > 0:
+      data["files_missing"] = self.report.files_missing
+
+    # add extra files
+    if len(self.report.files_extra) > 0:
+      data["files_extra"] = self.report.files_extra
+
+    # add all findings
+    if len(self.report.findings) > 0:
+      data["findings"] = []
+      for finding in self.report.findings:
+        item = {}
+        item["path"] = finding.path
+        item["checker"] = finding.checker
+        item["meta"] = finding.meta
+        item["facts"] = []
+        for fact in finding.facts:
+          fact_item = {}
+          fact_item["subpath"] = fact.subpath
+          fact_item["label"] = fact.label
+          fact_item["description"] = fact.description
+          fact_item["value"] = fact.value
+          item["facts"].append(fact_item)
+        data["findings"].append(item)
   
+    # write yaml file
+    with open(path, "w") as f:
+      yaml.dump(data, f)
