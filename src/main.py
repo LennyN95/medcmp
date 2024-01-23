@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
   src_path = "/app/test/src"
   ref_path = "/app/test/ref"
-  report_path = "/app/report.yml"
+  report_path = "/app/output/report.yml"
 
   # compare
   report = compare(src_path, ref_path)

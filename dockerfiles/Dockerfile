@@ -12,7 +12,7 @@ ENV TZ=Europe/Amsterdam
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Create a working directory and set it as the working directory
-RUN mkdir /app /app/data
+RUN mkdir /app /app/test /app/test/src /app/test/ref /app/output
 WORKDIR /app
 
 # Install system utilities and useful packages
