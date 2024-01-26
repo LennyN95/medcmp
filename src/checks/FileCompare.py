@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Type, Optional
-from Report import Report, ReportEntry, ReportEntryFact
+from Report import Report, ReportCheck, ReportCheckFinding
 
 class FileCompare:
 
@@ -34,7 +34,7 @@ class FileCheck(ABC):
   def __init__(self, src_path: str, ref_path: str):
     self.src_path = src_path
     self.ref_path = ref_path
-    self.facts: List[ReportEntryFact] = []
+    self.findings: List[ReportCheckFinding] = []
 
   @abstractmethod
   def can_check(self) -> bool:
@@ -44,15 +44,15 @@ class FileCheck(ABC):
   def check(self) -> bool:
       pass
   
-  def fact(self, label: str, description: str, value: any, subpath: str = ""):
-    self.facts.append(ReportEntryFact(label, description, value, subpath))
+  def add_finding(self, label: str, description: str, value: any, subpath: str = ""):
+    self.findings.append(ReportCheckFinding(label, description, value, subpath))
 
-  def report(self) -> ReportEntry:
-    entry = ReportEntry(self.src_path, self.__class__.__name__, {})
-    entry.facts = self.facts
+  def report(self) -> ReportCheck:
+    entry = ReportCheck(self.src_path, self.__class__.__name__, {})
+    entry.findings = self.findings
     return entry
 
-  def run(self) -> Optional[ReportEntry]:
+  def run(self) -> Optional[ReportCheck]:
     if self.can_check():
       check_passed = self.check()
       return self.report()

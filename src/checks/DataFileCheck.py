@@ -19,7 +19,8 @@ class ComparisonItem:
   src_value: any = None
   ref_value: any = None
   outcome: ComparisonOutcome = ComparisonOutcome.UNDEFINED
-  precision: tuple = None
+  info: any = None
+  #precision: tuple = None
 
 def get_data(file_path: str):
   """
@@ -64,7 +65,7 @@ def scan_data_paths(d: Union[dict, list], base: str = ""):
     for i, v in enumerate(d):
 
       # absolute path to this key
-      p = base + '.' + str(i) if base else str(i)
+      p = base + '.' + f'[{i}]' if base else f'[{i}]'
 
       # if dict or list, recursively iterate
       if isinstance(v, dict) or isinstance(v, list):
@@ -82,13 +83,20 @@ def get_value(d, path):
   keys = path.split(".")
   
   for k in keys: 
-    d = d[int(k)] if k.isnumeric() else d[k]
+    d = d[int(k[1:-1])] if k.startswith("[") else d[k]
   
   return d
 
 def round_down(value, decimals):
-    factor = 1 / (10 ** decimals)
-    return (value // factor) * factor
+  # factor = 1 / (10 ** decimals)
+  # return (value // factor) * factor
+
+  # factor = 10 ** decimals
+  # return  math.ceil(value * factor) / factor
+  
+  value_str = str(value)
+  decimal_index = value_str.find(".")
+  return float(value_str[:decimal_index + decimals + 1])
 
 def compare_numbers(v1: Union[int, float], v2: Union[int, float], verbose: bool = False):
 
@@ -133,6 +141,10 @@ def check_item(item: ComparisonItem):
   # check type
   if type(v1) != type(v2):
     item.outcome = ComparisonOutcome.TYPE_MISMATCH
+    item.info = {
+      'src': {'value': v1, 'type': type(v1).__name__},
+      'ref': {'value': v2, 'type': type(v2).__name__}
+    }
     return 
   
   # set type
@@ -165,9 +177,13 @@ def check_item(item: ComparisonItem):
       item.outcome = ComparisonOutcome.VALUE_EXACT
     elif scale > 0:
       item.outcome = ComparisonOutcome.VALUE_SIMILAR
-      item.precision = (scale, precision)
+      item.info = {'scale': scale, 'precision': precision}
     else:
       item.outcome = ComparisonOutcome.VALUE_MISMATCH
+      item.info = {
+        'src': {'value': v1},
+        'ref': {'value': v2}
+      }
 
 class DataFileCheck(FileCheck):
 
@@ -231,15 +247,15 @@ class DataFileCheck(FileCheck):
 
       # add facts to report for each item outcome
       if item.outcome == ComparisonOutcome.MISSING:
-        self.fact("Missing key", f"Key '{item.path}' is missing in source file", None, subpath=item.path)
+        self.add_finding("Missing key", f"Key '{item.path}' is missing in source file", item.info, subpath=item.path)
       elif item.outcome == ComparisonOutcome.EXTRA:
-        self.fact("Extra key", f"Key '{item.path}' is extra in source file", None, subpath=item.path)
+        self.add_finding("Extra key", f"Key '{item.path}' is extra in source file", item.info, subpath=item.path)
       elif item.outcome == ComparisonOutcome.TYPE_MISMATCH:
-        self.fact("Type mismatch", f"Type of key '{item.path}' is different in source file", None, subpath=item.path)
+        self.add_finding("Type mismatch", f"Type of key '{item.path}' is different in source file", item.info, subpath=item.path)
       elif item.outcome == ComparisonOutcome.VALUE_MISMATCH:
-        self.fact("Value mismatch", f"Value of key '{item.path}' is different in source file", None, subpath=item.path)
+        self.add_finding("Value mismatch", f"Value of key '{item.path}' is different in source file", item.info, subpath=item.path)
       elif item.outcome == ComparisonOutcome.VALUE_SIMILAR:
-        self.fact("Value similar", f"Value of key '{item.path}' is similar in source file", item.precision, subpath=item.path)
+        self.add_finding("Value similar", f"Value of key '{item.path}' is similar in source file", item.info, subpath=item.path)
 
       if item.outcome != ComparisonOutcome.VALUE_EXACT:
         check_passed = False

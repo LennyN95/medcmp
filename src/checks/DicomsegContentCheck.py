@@ -53,12 +53,12 @@ class DicomsegContentCheck(FileCheck):
         # FIXME: how do we aggregate the DCs for each segment?
         if dc < self.dc_thresh:
           print(">>> DICOM SEG segments #%g are not equal (DC/DC threshold: %g/%g)"%(segment_number, dc, self.dc_thresh))
-          self.fact("Dice Score Difference", "Dice score between reference and test image", dc, subpath="segment #%g"%segment_number)
+          self.add_finding("Dice Score Difference", "Dice score between reference and test image", dc, subpath="segment #%g"%segment_number)
           return False
 
       except Exception as e:
         print(">>> DICOM SEG segment #%g could not be compared"%segment_number)
-        self.fact("Comparison Fail", str(e), -1, subpath="segment #%g"%segment_number)   
+        self.add_finding("Comparison Fail", str(e), -1, subpath="segment #%g"%segment_number)   
 
     print(">>> The DICOM SEG files are equal (DC threshold: %g)"%self.dc_thresh)
     return True

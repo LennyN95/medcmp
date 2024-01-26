@@ -23,7 +23,7 @@ class ImageFileCheck(FileCheck):
     dice_score = dice_summary_dict["dc"]
 
     # return conclusion
-    self.fact("Dice Score", "Dice score between reference and test image", dice_score)
+    self.add_finding("Dice Score", "Dice score between reference and test image", dice_score)
 
     # return report entry
     return np.isclose(dice_score, 1.0, atol=self.tolerance)

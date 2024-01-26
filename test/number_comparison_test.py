@@ -1,4 +1,5 @@
-import unittest, math, random
+import unittest, math, random, sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 from src.checks.DataFileCheck import compare_numbers
 
 class NumberComparisonTest(unittest.TestCase):
