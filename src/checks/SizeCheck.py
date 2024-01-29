@@ -4,7 +4,7 @@ import os
 class SizeCheck(FileCheck):
 
   def can_check(self) -> bool:
-    return True
+    return self.src_path.endswith(".dcm") == False
 
   def check(self) -> bool:
 
