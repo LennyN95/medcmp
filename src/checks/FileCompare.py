@@ -54,7 +54,11 @@ class FileCheck(ABC):
 
   def run(self) -> Optional[ReportCheck]:
     if self.can_check():
-      check_passed = self.check()
+      try:
+        check_passed = self.check()
+      except Exception as e:
+        self.add_finding("Exception", "An exception occurred during check", str(e))
+        check_passed = False
       return self.report()
     else:
       return None
