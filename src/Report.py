@@ -1,4 +1,5 @@
 import yaml
+from typing import Union
 
 class Report:
   files_missing = []        # files missing in src
@@ -51,12 +52,30 @@ class ReportCheck:
     self.path = path
     self.checker = checker
     self.findings = []
+    self.notes = []
     self.meta = meta
 
-  def add(self, fact: 'ReportCheckFinding'):
-    self.findings.append(fact)
+  def add(self, fact: Union['ReportCheckFinding', 'ReportCheckNote']):
+    if isinstance(fact, ReportCheckNote):
+      self.notes.append(fact)
+    elif isinstance(fact, ReportCheckFinding):
+      self.findings.append(fact)
+    else:
+      raise ValueError("Invalid fact type (must be either finding or note).")
 
 class ReportCheckFinding:
+  subpath: str
+  label: str
+  description: str
+  info: any
+
+  def __init__(self, label: str, description: str, info: any, subpath: str = ""):
+    self.subpath = subpath
+    self.label = label
+    self.description = description
+    self.info = info
+
+class ReportCheckNote:
   subpath: str
   label: str
   description: str
@@ -87,7 +106,7 @@ class ReportConsolePrint:
       for extra_path in self.report.files_extra:
         print(f"  {extra_path}")
 
-    # print all findings
+    # print all cheks notes and findings
     if len(self.report.checks) > 0:
       print("All checks:")
       for check in self.report.checks:
@@ -95,7 +114,9 @@ class ReportConsolePrint:
         print(f"    checker: {check.checker}")
         # print(f"    meta: {finding.meta}")
         for finding in check.findings:
-          print(f"    {finding.subpath}: {finding.label} ({finding.info})")
+          print(f"F    {finding.subpath}: {finding.label} ({finding.info})")
+        for note in check.notes:
+          print(f"N    {note.subpath}: {note.label} ({note.info})")
 
 class ReportYamlExport:
 
@@ -121,6 +142,8 @@ class ReportYamlExport:
         item["path"] = check.path
         item["checker"] = check.checker
         #item["meta"] = finding.meta
+        
+        # add findings
         item["findings"] = []
         for finding in check.findings:
           fact_item = {}
@@ -131,14 +154,31 @@ class ReportYamlExport:
           if finding.info:
             fact_item["info"] = finding.info
           item["findings"].append(fact_item)
+        
+        # add notes
+        item["notes"] = []
+        for note in check.notes:
+          note_item = {}
+          note_item["label"] = note.label
+          note_item["description"] = note.description
+          if note.subpath: 
+            note_item["subpath"] = note.subpath
+          if note.info:
+            note_item["info"] = note.info
+          item["notes"].append(note_item)
 
-        # remove empty findings 
+        # remove empty findings and empty notes from item
         if len(item["findings"]) == 0:
           del item["findings"]
 
+        if len(item["notes"]) == 0:
+          del item["notes"]
+
+        # add item to checked files
         data["checked_files"].append(item)
 
     # add summary (remove all empty finding objects to reduce size)
+    # NOTE: report summary only contains findings (not notes)
     report_summary = self.report.summarize()
     for checker in report_summary["checks"]:
       if not bool(report_summary["checks"][checker]["findings"]):

@@ -39,10 +39,26 @@ class DicomsegContentCheck(FileCheck):
     reader = pydicom_seg.SegmentReader()
     reference_seg = reader.read(dcm)
 
+    # check if the number of segments is the same
     if len(output_seg.available_segments) != len(reference_seg.available_segments):
+      
+      # console printout
       print(">>> The DICOM SEG files store a different number of segments")
+      
+      # add finding 
+      info = {
+        'src_segments': len(output_seg.available_segments),
+        'ref_segments': len(reference_seg.available_segments)
+      }
+      
+      self.add_finding("Segment Count Difference", "The DICOM SEG files store a different number of segments", info)
+      
       return False
+    
+    # add note about the number of segments
+    self.add_note("Segment Count", "The number of segments identified in the inspected dicomseg file.", len(output_seg.available_segments))
 
+    # compare each segment
     for segment_number in output_seg.available_segments:
       output_segment = output_seg.segment_image(segment_number)
       reference_segment = reference_seg.segment_image(segment_number)
