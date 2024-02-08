@@ -1,4 +1,4 @@
-import yaml
+import os, yaml
 from typing import Union
 
 class Report:
@@ -134,48 +134,66 @@ class ReportYamlExport:
     if len(self.report.files_extra) > 0:
       data["extra_files"] = self.report.files_extra
 
+    # grouping by paths
+    file_checks = {}
+    if len(self.report.checks):
+      for check in self.report.checks:
+        if check.path not in file_checks:
+          file_checks[check.path] = []
+        file_checks[check.path].append(check)
+
     # add all findings
     if len(self.report.checks) > 0:
       data["checked_files"] = []
-      for check in self.report.checks:
-        item = {}
-        item["path"] = check.path
-        item["checker"] = check.checker
-        #item["meta"] = finding.meta
+      
+      for path, checks in file_checks.items():
+        checked_file = {
+          "file": os.path.basename(path),
+          "path": path,
+          "checks": []
+        }
         
-        # add findings
-        item["findings"] = []
-        for finding in check.findings:
-          fact_item = {}
-          fact_item["label"] = finding.label
-          fact_item["description"] = finding.description
-          if finding.subpath: 
-            fact_item["subpath"] = finding.subpath
-          if finding.info:
-            fact_item["info"] = finding.info
-          item["findings"].append(fact_item)
-        
-        # add notes
-        item["notes"] = []
-        for note in check.notes:
-          note_item = {}
-          note_item["label"] = note.label
-          note_item["description"] = note.description
-          if note.subpath: 
-            note_item["subpath"] = note.subpath
-          if note.info:
-            note_item["info"] = note.info
-          item["notes"].append(note_item)
+        for check in checks:
+          item = {}
+          item["checker"] = check.checker
+          #item["meta"] = finding.meta
+                
+          # add notes
+          item["notes"] = []
+          for note in check.notes:
+            note_item = {}
+            note_item["label"] = note.label
+            note_item["description"] = note.description
+            if note.subpath: 
+              note_item["subpath"] = note.subpath
+            if note.info:
+              note_item["info"] = note.info
+            item["notes"].append(note_item)
+            
+          # add findings
+          item["findings"] = []
+          for finding in check.findings:
+            fact_item = {}
+            fact_item["label"] = finding.label
+            fact_item["description"] = finding.description
+            if finding.subpath: 
+              fact_item["subpath"] = finding.subpath
+            if finding.info:
+              fact_item["info"] = finding.info
+            item["findings"].append(fact_item)
 
-        # remove empty findings and empty notes from item
-        if len(item["findings"]) == 0:
-          del item["findings"]
+          # remove empty findings and empty notes from item
+          if len(item["notes"]) == 0:
+            del item["notes"]
+            
+          if len(item["findings"]) == 0:
+            del item["findings"]
 
-        if len(item["notes"]) == 0:
-          del item["notes"]
-
-        # add item to checked files
-        data["checked_files"].append(item)
+          # add item to file cheks
+          checked_file["checks"].append(item)
+          
+        # add file checks to data
+        data["checked_files"].append(checked_file)
 
     # add summary (remove all empty finding objects to reduce size)
     # NOTE: report summary only contains findings (not notes)
