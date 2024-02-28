@@ -153,9 +153,13 @@ def check_item(item: ComparisonItem):
   # check boolean values
   if isinstance(v1, bool):
     if v1 != v2:
-      item.outcome =  ComparisonOutcome.VALUE_MISMATCH
+      item.outcome = ComparisonOutcome.VALUE_MISMATCH
+      item.info = {
+        'src': v1,
+        'ref': v2
+      }
     else:
-      item.outcome =  ComparisonOutcome.VALUE_EXACT
+      item.outcome = ComparisonOutcome.VALUE_EXACT
 
     return
     
@@ -163,6 +167,10 @@ def check_item(item: ComparisonItem):
   if isinstance(v1, str):
     if v1 != v2:
       item.outcome = ComparisonOutcome.VALUE_MISMATCH
+      item.info = {
+        'src': v1,
+        'ref': v2
+      }
     else:
       item.outcome = ComparisonOutcome.VALUE_EXACT
 
@@ -177,12 +185,17 @@ def check_item(item: ComparisonItem):
       item.outcome = ComparisonOutcome.VALUE_EXACT
     elif scale > 0:
       item.outcome = ComparisonOutcome.VALUE_SIMILAR
-      item.info = {'scale': scale, 'precision': precision}
+      item.info = {
+        'scale': scale, 
+        'precision': precision,
+        'src': v1,
+        'ref': v2
+      }
     else:
       item.outcome = ComparisonOutcome.VALUE_MISMATCH
       item.info = {
-        'src': {'value': v1},
-        'ref': {'value': v2}
+        'src': v1,
+        'ref': v2
       }
 
 class DataFileCheck(FileCheck):
