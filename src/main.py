@@ -40,23 +40,33 @@ def compare(src: str, ref: str, report: Report = None, verbose: bool = False):
 if __name__ == "__main__":
 
   # use arg1, arg2 and arg3 for src, ref and report path
-  if len(sys.argv) == 4:
+  if len(sys.argv) >= 4:
     src_path = sys.argv[1]
     ref_path = sys.argv[2]
     report_path = sys.argv[3]
+    report_name = sys.argv[4] if len(sys.argv) > 4 else None
   else:
     src_path = "/app/test/src"
     ref_path = "/app/test/ref"
     report_path = "/app/output/report.yml"
+    report_name = None
 
   # print paths
   print("RUNNING MEDCMP ON")
   print("src_path:", src_path)
   print("ref_path:", ref_path)
   print("report_path:", report_path)
+  print("report_name:", report_name)
+
+  # create report
+  report = Report(report_name)
+  
+  # print 
+  print("report_id:", report.id)
+  print("------------------")
 
   # compare
-  report = compare(src_path, ref_path)
+  compare(src_path, ref_path, report=report)
 
   # print report
   ReportConsolePrint(report).print()

@@ -1,15 +1,20 @@
-import os, yaml
-from typing import Union
+import os, yaml, uuid, datetime
+from typing import Union, Optional
 
 class Report:
+  
   files_missing = []        # files missing in src
   files_extra = []          # files missing in ref
   checks = []               # list of checks
 
-  def __init__(self):
+  def __init__(self, name: Optional[str] = None):
     self.files_missing = []
     self.files_extra = []
     self.checks = []  
+    
+    self.id = str(uuid.uuid4())
+    self.name = name
+    self.datetime = datetime.datetime.now()
 
   def add(self, entry: 'ReportCheck'):
     self.checks.append(entry)
@@ -123,9 +128,17 @@ class ReportYamlExport:
   def __init__(self, report: Report):
     self.report = report
 
-  def generate(self):
-    data = {}
-
+  def generate(self):    
+    data = {
+      'id': self.report.id,
+      'name': self.report.name,
+      'date': self.report.datetime.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    # if not specified do not include name field
+    if self.report.name is None:
+      del data["name"]
+      
     # add missing files
     if len(self.report.files_missing) > 0:
       data["missing_files"] = self.report.files_missing
