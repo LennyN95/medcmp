@@ -255,7 +255,12 @@ class DataFileCheck(FileCheck):
     # wheather check passed or failes
     check_passed = True
 
-    # conclusion
+    # overview (notes)
+    exact_value_paths = [item.path for item in items if item.outcome == ComparisonItem.VALUE_EXACT]
+    if len(exact_value_paths) > 0:
+      self.add_note("Value Match", "These keys have identical values", exact_value_paths)
+        
+    # conclusion (findings)
     for item in items:
 
       # add facts to report for each item outcome
