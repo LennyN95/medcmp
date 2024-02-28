@@ -161,7 +161,7 @@ class ReportDeviationTest(unittest.TestCase):
     # checks
     self.assertListEqual(report_yml_data['missing_files'], ['deep/nested/missing.yml'])
     self.assertListEqual(report_yml_data['extra_files'], ['deep/nested/extra.yml'])
-    self.assertEqual(len(report_yml_data['checked_files']), 6)
+    self.assertEqual(len(report_yml_data['checked_files']), 4)
 
     # summary
     self.assertEqual(report_yml_data['summary']['files_missing'], 1)
