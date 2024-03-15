@@ -257,8 +257,9 @@ class DataFileCheck(FileCheck):
 
     # overview (notes)
     exact_value_paths = [item.path for item in items if item.outcome == ComparisonOutcome.VALUE_EXACT]
+    exact_value_paths_str = ",".join(exact_value_paths) if len(exact_value_paths) < 20 else ",".join(exact_value_paths[:20]) + " (+ " + str(len(exact_value_paths) - 20) + " more)"
     if len(exact_value_paths) > 0:
-      self.add_note("Value Match", "These keys have identical values", exact_value_paths)
+      self.add_note("Value Match", "These keys have identical values", exact_value_paths_str)
         
     # conclusion (findings)
     for item in items:
