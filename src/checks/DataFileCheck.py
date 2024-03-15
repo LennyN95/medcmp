@@ -179,7 +179,7 @@ def check_item(item: ComparisonItem):
   # if numeric, check various precisions
   if (isinstance(v1, int) or isinstance(v1, float)) and not isinstance(v1, bool):
     match, scale, precision = compare_numbers(v1, v2, verbose=False)
-    print("compare numbers", v1, "with", v2, " -> ", match, scale, precision)
+    #print("compare numbers", v1, "with", v2, " -> ", match, scale, precision)
 
     if match:
       item.outcome = ComparisonOutcome.VALUE_EXACT
