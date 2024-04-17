@@ -1,7 +1,7 @@
 from .FileCompare import FileCheck
 from typing import Union
 from enum import Enum
-import math, sys, yaml, json
+import math, sys, yaml, json, csv
 
 class ComparisonOutcome(Enum):
   UNDEFINED = "undefined"
@@ -34,6 +34,12 @@ def get_data(file_path: str):
   elif file_path.endswith(".yml") or file_path.endswith(".yaml"):
     with open(file_path, "r") as f:
       data = yaml.load(f, Loader=yaml.FullLoader)
+  elif file_path.endswith(".csv"):
+    with open(file_path, "r") as f:
+      reader = csv.DictReader(f)
+      data = [row for row in reader]
+      print("RECEIVED CSV DATA")
+      print(data)
   else:
     raise Exception(f"Unknown file type: {file_path}")
   
@@ -202,7 +208,9 @@ class DataFileCheck(FileCheck):
 
   def can_check(self):
     return self.src_path.endswith(".json") \
-        or self.src_path.endswith(".yml")
+        or self.src_path.endswith(".yml") \
+        or self.src_path.endswith(".yaml") \
+        or self.src_path.endswith(".csv")
 
   def check(self):
     """
