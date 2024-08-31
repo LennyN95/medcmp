@@ -49,8 +49,8 @@ class ImageFileCheck(FileCheck):
     self.add_note("Image Diff Stat", "Statistics of the diff image between src and ref.", diff_img)
 
     # check that MIN and MAX are within tolerance
-    check = np.isclose(diff_img["MIN"], 0.0, atol=self.value_tolerance) \
-        and np.isclose(diff_img["MAX"], 0.0, atol=self.value_tolerance)
+    check = bool(np.isclose(diff_img["MIN"], 0.0, atol=self.value_tolerance)) \
+        and bool(np.isclose(diff_img["MAX"], 0.0, atol=self.value_tolerance))
 
     # add finding if check fails
     if not check:

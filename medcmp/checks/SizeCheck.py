@@ -4,10 +4,10 @@ import os
 class SizeCheck(FileCheck):
 
   def can_check(self) -> bool:
-    return self.src_path.endswith(".dcm") == False \
-      and  self.src_path.endswith(".nii.gz") == False \
-      and  self.src_path.endswith(".nrrd") == False \
-      and  self.src_path.endswith(".mha") == False
+    return not self.src_path.endswith(".dcm") \
+      and  not self.src_path.endswith(".nii.gz") \
+      and  not self.src_path.endswith(".nrrd") \
+      and  not self.src_path.endswith(".mha")
 
   def check(self) -> bool:
 

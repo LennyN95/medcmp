@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Type, Optional
-from Report import Report, ReportCheck, ReportCheckFinding, ReportCheckNote
+from typing import List, Type, Optional, Any
+from medcmp.Report import Report, ReportCheck, ReportCheckFinding, ReportCheckNote
 
 class FileCompare:
 
@@ -11,7 +11,7 @@ class FileCompare:
     self.report = report
     self.checks = []
 
-  def register(self, check: 'FileCheck'):
+  def register(self, check: type):
     assert issubclass(check, FileCheck)
     assert check not in self.checks
     self.checks.append(check)
@@ -45,10 +45,10 @@ class FileCheck(ABC):
   def check(self) -> bool:
       pass
   
-  def add_finding(self, label: str, description: str, value: any, subpath: str = ""):
+  def add_finding(self, label: str, description: str, value: Any, subpath: str = ""):
     self.findings.append(ReportCheckFinding(label, description, value, subpath))
 
-  def add_note(self, label: str, description: str, value: any, subpath: str = ""):
+  def add_note(self, label: str, description: str, value: Any, subpath: str = ""):
     self.notes.append(ReportCheckNote(label, description, value, subpath))
 
   def report(self) -> ReportCheck:
@@ -60,10 +60,9 @@ class FileCheck(ABC):
   def run(self) -> Optional[ReportCheck]:
     if self.can_check():
       try:
-        check_passed = self.check()
+        _ = self.check()
       except Exception as e:
         self.add_finding("Exception", "An exception occurred during check", str(e))
-        check_passed = False
       return self.report()
     else:
       return None

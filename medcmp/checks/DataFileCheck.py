@@ -1,7 +1,11 @@
 from .FileCompare import FileCheck
-from typing import Union
+from typing import Union, Optional, Any
 from enum import Enum
-import math, sys, yaml, json, csv
+import math
+import sys
+import yaml
+import json
+import csv
 
 class ComparisonOutcome(Enum):
   UNDEFINED = "undefined"
@@ -15,11 +19,11 @@ class ComparisonOutcome(Enum):
 
 class ComparisonItem: 
   path: str
-  type: str = None
-  src_value: any = None
-  ref_value: any = None
+  type: Optional[str] = None
+  src_value: Any = None
+  ref_value: Any = None
   outcome: ComparisonOutcome = ComparisonOutcome.UNDEFINED
-  info: any = None
+  info: Any = None
   #precision: tuple = None
 
 def get_data(file_path: str):
@@ -107,7 +111,7 @@ def round_down(value, decimals):
 def compare_numbers(v1: Union[int, float], v2: Union[int, float], verbose: bool = False):
 
   # v1 and v2 must be of equal type and numeric
-  assert type(v1) == type(v2)
+  assert type(v1) == type(v2) # noqa: E721
   assert not isinstance(v1, bool)
   assert isinstance(v1, float) or isinstance(v1, int)
 
@@ -124,7 +128,8 @@ def compare_numbers(v1: Union[int, float], v2: Union[int, float], verbose: bool 
   if math.log10(v1) >= 0:
     for i in range(int(math.log10(v1)) + 1):
       if int(v1 / 10**i) == int(v2 / 10**i):
-        if verbose: print("B] v1 (", int(v1 / 10**i) ,") and v2 (", int(v2 / 10**i) ,") scale", int(math.log10(v1)) + 1, "match at scale", 10**i)
+        if verbose: 
+          print("B] v1 (", int(v1 / 10**i) ,") and v2 (", int(v2 / 10**i) ,") scale", int(math.log10(v1)) + 1, "match at scale", 10**i)
         matching_scale = 10**i
         break
 
@@ -133,7 +138,8 @@ def compare_numbers(v1: Union[int, float], v2: Union[int, float], verbose: bool 
   if isinstance(v1, float):
     for precision in range(sys.float_info.dig):
       if round_down(v1, precision) == round_down(v2, precision):
-        if verbose:  print("C] v1 (",v1,") and v2 (",v2,") match at precision", precision, "(", round_down(v1, precision), "-", round_down(v2, precision), ")")
+        if verbose:  
+          print("C] v1 (",v1,") and v2 (",v2,") match at precision", precision, "(", round_down(v1, precision), "-", round_down(v2, precision), ")")
         matching_precision = precision
 
   # report results
@@ -145,7 +151,7 @@ def check_item(item: ComparisonItem):
   v2 = item.ref_value
 
   # check type
-  if type(v1) != type(v2):
+  if type(v1) != type(v2): # noqa: E721
     item.outcome = ComparisonOutcome.TYPE_MISMATCH
     item.info = {
       'src': {'value': v1, 'type': type(v1).__name__},
@@ -239,7 +245,7 @@ class DataFileCheck(FileCheck):
       item.path = p
       
       # check if path is in ref or if path is an extra path
-      if not p in ref_paths:
+      if p not in ref_paths:
         item.outcome = ComparisonOutcome.EXTRA
         continue
 

@@ -25,11 +25,11 @@ class DicomsegContentCheck(FileCheck):
 
   def check(self) -> bool:
 
-   if self.verbose:
-    print("\nComparing DICOM SEG files...")
+    if self.verbose:
+      print("\nComparing DICOM SEG files...")
 
-    print("Output file:", self.src_path)
-    print("Reference file:", self.ref_path)
+      print("Output file:", self.src_path)
+      print("Reference file:", self.ref_path)
 
     dcm = pydicom.dcmread(self.src_path)
     reader = pydicom_seg.SegmentReader()

@@ -1,11 +1,19 @@
-import os, yaml, uuid, datetime
-from typing import Union, Optional
+import os
+import yaml
+import uuid
+import datetime
+
+from typing import Union, Optional, List, Dict, TypedDict, Any
+
+class CheckerDataDict(TypedDict):
+  files: int
+  findings: Dict[str, int]
 
 class Report:
   
-  files_missing = []        # files missing in src
-  files_extra = []          # files missing in ref
-  checks = []               # list of checks
+  files_missing: List[str] = []        # files missing in src
+  files_extra: List[str] = []          # files missing in ref
+  checks: List['ReportCheck'] = []    # list of checks
 
   def __init__(self, name: Optional[str] = None):
     self.files_missing = []
@@ -21,8 +29,7 @@ class Report:
 
   def summarize(self) -> dict:
     
-    cehcks_data = []
-    checker_data = {}
+    checker_data: Dict[str, CheckerDataDict] = {}
 
     for check in self.checks:
       if check.checker not in checker_data: 
@@ -39,7 +46,6 @@ class Report:
         checker_data[check.checker]["findings"][finding.label] += 1
 
     # reduce checker array to unique files
-
     data = {
       "files_missing": len(self.files_missing),
       "files_extra": len(self.files_extra),
@@ -56,8 +62,8 @@ class ReportCheck:
   def __init__(self, path: str, checker: str, meta: dict = {}):
     self.path = path
     self.checker = checker
-    self.findings = []
-    self.notes = []
+    self.findings: List[ReportCheckFinding] = []
+    self.notes: List[ReportCheckNote] = []
     self.meta = meta
 
   def add(self, fact: Union['ReportCheckFinding', 'ReportCheckNote']):
@@ -72,9 +78,9 @@ class ReportCheckFinding:
   subpath: str
   label: str
   description: str
-  info: any
+  info: Any
 
-  def __init__(self, label: str, description: str, info: any, subpath: str = ""):
+  def __init__(self, label: str, description: str, info: Any, subpath: str = ""):
     self.subpath = subpath
     self.label = label
     self.description = description
@@ -84,9 +90,9 @@ class ReportCheckNote:
   subpath: str
   label: str
   description: str
-  info: any
+  info: Any
 
-  def __init__(self, label: str, description: str, info: any, subpath: str = ""):
+  def __init__(self, label: str, description: str, info: Any, subpath: str = ""):
     self.subpath = subpath
     self.label = label
     self.description = description

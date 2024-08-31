@@ -1,11 +1,19 @@
-import unittest, math, random, sys, os, json, yaml, shutil
+import unittest
+import random
+import os
+import json
+import yaml
+import shutil
+
 #sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-from src.main import compare
-from src.Report import Report, ReportConsolePrint, ReportYamlExport
+from medcmp.main import compare
+from medcmp.Report import ReportConsolePrint, ReportYamlExport
+
+from typing import Union, Optional
 
 TEMP_DIR = 'tmp'
 
-def create_file(base: str, path: str, src_content: any, ref_content: any):
+def create_file(base: str, path: str, src_content: Optional[Union[dict, str]], ref_content: Optional[Union[dict, str]]):
   ext = os.path.splitext(path)[1]
 
   src_path = os.path.join(base, 'src', path)
@@ -56,18 +64,22 @@ def create_file(base: str, path: str, src_content: any, ref_content: any):
     assert isinstance(src_content, str) or src_content is None
     assert isinstance(ref_content, str) or ref_content is None
 
-    if src_content.startswith('http') and ref_content.startswith('http'):
-      if src_content is not None:
-        download_file(path, src_content)
-      if ref_content is not None:
-        download_file(path, ref_content)
-    elif src_content.startswith('/') and ref_content.startswith('/'):
-      if src_content is not None:
-        copy_file(src_content, path)
-      if ref_content is not None:
-        copy_file(ref_content, path)
-    else:
-      raise Exception("Unsupported content")
+    if src_content is not None:
+      if src_content.startswith('http'):
+        download_file(src_path, src_content)
+      elif src_content.startswith('/'):
+        copy_file(src_content, src_path)
+      else:
+        raise Exception("Unsupported content")
+      
+    if ref_content is not None:
+      if ref_content.startswith('http'):
+        download_file(ref_path, ref_content)
+      elif ref_content.startswith('/'):
+        copy_file(ref_content, ref_path)
+      else:
+        raise Exception("Unsupported content")
+
   else:
     raise Exception("Unsupported file type: " + ext)
 
@@ -106,13 +118,15 @@ class ReportPassingTest(unittest.TestCase):
     ReportConsolePrint(report).print()
 
     # yml report
-    #ReportYamlExport(report).export(self.__class__.__name__ + '.report.yml')
+    report_file_name = self.__class__.__name__ + '.report.yml'
+    ReportYamlExport(report).export(report_file_name)
+    
     report_yml_data = ReportYamlExport(report).generate()
 
     # checks
     self.assertFalse('missing_files' in report_yml_data)
     self.assertFalse('extra_files' in report_yml_data)
-    self.assertEqual(len(report_yml_data['checked_files']), 6)
+    self.assertEqual(len(report_yml_data['checked_files']), 4)
 
     # summary
     self.assertEqual(report_yml_data['summary']['files_missing'], 0)

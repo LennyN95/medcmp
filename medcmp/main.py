@@ -1,14 +1,17 @@
-from Report import Report, ReportConsolePrint, ReportYamlExport
-from scan import compare_tree_structures
-from checks.FileCompare import FileCompare
-from checks.DataFileCheck import DataFileCheck
-from checks.ImageFileCheck import ImageFileCheck
-from checks.SizeCheck import SizeCheck
-from checks.DicomsegContentCheck import DicomsegContentCheck
-import sys, os
+import sys
+import os
 
+from typing import Optional
 
-def compare(src: str, ref: str, report: Report = None, verbose: bool = False):
+from medcmp.Report import Report, ReportConsolePrint, ReportYamlExport
+from medcmp.scan import compare_tree_structures
+from medcmp.checks.FileCompare import FileCompare
+from medcmp.checks.DataFileCheck import DataFileCheck
+from medcmp.checks.ImageFileCheck import ImageFileCheck
+from medcmp.checks.SizeCheck import SizeCheck
+from medcmp.checks.DicomsegContentCheck import DicomsegContentCheck
+
+def compare(src: str, ref: str, report: Optional[Report] = None, verbose: bool = False):
   """
   Compare two directories.
   """
@@ -37,8 +40,8 @@ def compare(src: str, ref: str, report: Report = None, verbose: bool = False):
   return report
 
 
-if __name__ == "__main__":
-
+def main():
+  
   # use arg1, arg2 and arg3 for src, ref and report path
   if len(sys.argv) >= 4:
     src_path = sys.argv[1]
@@ -73,3 +76,7 @@ if __name__ == "__main__":
 
   # export report
   ReportYamlExport(report).export(report_path)
+
+
+if __name__ == "__main__":
+  main()
