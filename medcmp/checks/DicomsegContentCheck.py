@@ -65,6 +65,9 @@ class DicomsegContentCheck(FileCheck):
             len(output_seg.available_segments),
         )
 
+        # fail / pass
+        pass_all_segments = True
+
         # compare each segment
         for segment_number in output_seg.available_segments:
             output_segment = output_seg.segment_image(segment_number)
@@ -74,7 +77,12 @@ class DicomsegContentCheck(FileCheck):
                 dc = compute_overlap(output_segment, reference_segment)
 
                 # FIXME: how do we aggregate the DCs for each segment?
-                if dc < self.dc_thresh:
+                if dc >= self.dc_thresh:
+                    print(
+                        ">>> DICOM SEG segments #%g are equal (DC threshold: %g)"
+                        % (segment_number, self.dc_thresh)
+                    )
+                elif dc < self.dc_thresh:
                     print(
                         ">>> DICOM SEG segments #%g are not equal (DC/DC threshold: %g/%g)"
                         % (segment_number, dc, self.dc_thresh)
@@ -85,7 +93,7 @@ class DicomsegContentCheck(FileCheck):
                         dc,
                         subpath="segment #%g" % segment_number,
                     )
-                    return False
+                    pass_all_segments = False
 
             except Exception as e:
                 print(
@@ -98,5 +106,17 @@ class DicomsegContentCheck(FileCheck):
                     subpath="segment #%g" % segment_number,
                 )
 
-        print(">>> The DICOM SEG files are equal (DC threshold: %g)" % self.dc_thresh)
-        return True
+        # debug statement if all segments pass
+        if pass_all_segments:
+            print(
+                ">>> The DICOM SEG files are equal across all labels (DC threshold: %g)"
+                % self.dc_thresh
+            )
+        else:
+            print(
+                ">>> The DICOM SEG files are not equal for one or more labels (DC threshold: %g)"
+                % self.dc_thresh
+            )
+
+        # return pass/fail (summarized conclusion) for all segments
+        return pass_all_segments
