@@ -19,6 +19,7 @@ WORKDIR /app
 RUN apt update && apt install -y --no-install-recommends \  
   wget \
   curl \
+  ca-certificates \
   jq \
   gcc \
   unzip \
@@ -32,16 +33,19 @@ RUN apt update && apt install -y --no-install-recommends \
   plastimatch \
   && rm -rf /var/lib/apt/lists/* 
 
-# Install poetry and add to path
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:${PATH}"
+# Install uv (https://docs.astral.sh/uv/guides/integration/docker/#installing-uv)
+# COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
 
-# copy source code and poetry files
+
+# copy source code and pyproject files
 COPY ./medcmp /app/medcmp
-COPY poetry.lock pyproject.toml README.md /app/
+COPY uv.lock pyproject.toml README.md /app/
 
-# Install dependencies
-RUN poetry install
+# setup python environment
+RUN uv sync
 
-# Set the entrypoint
-ENTRYPOINT ["poetry", "run", "medcmp"]
+# set the entrypoint to run medcmp
+ENTRYPOINT ["uv", "run", "medcmp"]

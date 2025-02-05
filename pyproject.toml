@@ -1,27 +1,31 @@
-[tool.poetry]
+[project]
+authors = [
+    {name = "LennyN95", email = "lenny@moontec.de"},
+]
+requires-python = "<4.0,>=3.8"
+dependencies = [
+    "pandas==2.0.3",
+    "pyyaml<7.0.0,>=6.0.2",
+    "pydicom<3.0.0,>=2.4.4",
+    "pydicom-seg<1.0.0,>=0.4.1",
+    "simpleitk<3.0.0,>=2.4.0",
+    "pyplastimatch<1.0.0,>=0.4.6",
+]
 name = "medcmp"
 version = "0.1.1"
 description = "Iteratively compare generated output of medical imaging segmentation and prediction models and reporting."
-authors = ["LennyN95 <lenny@moontec.de>"]
 readme = "README.md"
 
-[tool.poetry.dependencies]
-python = "^3.8"
-pandas = "2.0.3"
-pyyaml = "^6.0.2"
-pydicom = "^2.4.4"
-pydicom-seg = "^0.4.1"
-simpleitk = "^2.4.0"
-pyplastimatch = "^0.4.6"
-
-[tool.poetry.group.dev.dependencies]
-mypy = "^1.11.2"
-ruff = "^0.6.3"
-pytest = "^8.3.2"
-
-[tool.poetry.scripts]
+[project.scripts]
 medcmp = "medcmp.main:main"
 
+[dependency-groups]
+dev = [
+    "mypy<2.0.0,>=1.11.2",
+    "ruff<1.0.0,>=0.6.3",
+    "pytest<9.0.0,>=8.3.2",
+]
+
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

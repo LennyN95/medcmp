@@ -1,39 +1,39 @@
 
-# variables
+# --- variables
 ifneq (,$(wildcard ./.env))
     include .env
     export
 endif
 
-# docker 
+# --- container / docker 
 docker-build:
 	docker build -t $(IMAGE_NAME) .
 
 docker-run:
 	docker run -t --rm -v $(SOURCE_DIR):/app/test/src:ro -v $(REFERENCE_DIR):/app/test/ref:ro $(IMAGE_NAME)
 
-# poetry 
-poetry-setup:
-	poetry env use 3.8
-	poetry install
+# --- local / uv 
+uv-setup:
+	uv venv -p 3.11
+	uv sync
 
-poetry-install:
-	poetry install
+uv-install:
+	uv sync
 
-poetry-run:
-	poetry run medcmp $(SOURCE_DIR) $(REFERENCE_DIR)
+uv-run:
+	uv run medcmp $(SOURCE_DIR) $(REFERENCE_DIR) $(REPORT_FILE)
 
-# test & code quality
+# --- test & code quality
 test:
-	poetry run pytest
+	uv run pytest
 
 lint:
-	poetry run ruff check .
+	uv run ruff check .
 
 format:
-	poetry run ruff format .
+	uv run ruff format .
 
 mypy:
-	poetry run mypy .
+	uv run mypy .
 
 code-quality: lint format test mypy
