@@ -1,15 +1,20 @@
-import unittest, math, random, sys, os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-from src.checks.DataFileCheck import compare_numbers
+import unittest
+import math
+import random
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+from medcmp.checks.DataFileCheck import compare_numbers
+
 
 class NumberComparisonTest(unittest.TestCase):
-
     def setUp(self):
         random.seed(823468228)
 
     def test_equal_integer(self):
         self.assertTupleEqual(compare_numbers(1, 1), (True, 1, math.inf))
-        
+
     def test_equal_float(self):
         self.assertTupleEqual(compare_numbers(1.0, 1.0), (True, 1.0, math.inf))
 
@@ -24,30 +29,30 @@ class NumberComparisonTest(unittest.TestCase):
 
         # iterate over integers with 1 to 16 digits
         for scale in range(1, 17):
-
             # generate a random integer with `scale` digits
-            a = random.randint(10**scale, 10**(scale+1)-1)
+            a = random.randint(10**scale, 10 ** (scale + 1) - 1)
 
             # apply an error to any digit
             for error in range(1, scale):
-                
                 # extract the digit at index `error`
-                ne = a % 10**(error+1) // 10**error
+                ne = a % 10 ** (error + 1) // 10**error
 
                 # calculate a random, non-zero delta for digit at index `error`
                 d = 0
-                while d == 0: 
-                    d = (10 ** error) * random.randint(-ne, 9-ne)
+                while d == 0:
+                    d = (10**error) * random.randint(-ne, 9 - ne)
 
                 # apply delta to digit at index `error`
                 b = a + d
 
                 # compare numbers
                 #  the expected result is 10**(error + 1) because if the error is eg. in the 10th, the 100th is the most accurate digit
-                self.assertTupleEqual(compare_numbers(a, b), (False, 10**(error + 1), -1))
+                self.assertTupleEqual(
+                    compare_numbers(a, b), (False, 10 ** (error + 1), -1)
+                )
 
     def test_special(self):
-        a = 69809588409 
+        a = 69809588409
         b = 69869588409
 
         self.assertTupleEqual(compare_numbers(a, b), (False, 100000000, -1))
@@ -68,7 +73,9 @@ class NumberComparisonTest(unittest.TestCase):
         self.assertTupleEqual(compare_numbers(1.23456789, 1.23466789), (False, 1, 3))
 
     def test_float_precision_p6(self):
-        self.assertTupleEqual(compare_numbers(1.23456789, 1.23556789, verbose=True), (False, 1, 2))
+        self.assertTupleEqual(
+            compare_numbers(1.23456789, 1.23556789, verbose=True), (False, 1, 2)
+        )
 
     def test_float_precision_p7(self):
         self.assertTupleEqual(compare_numbers(1.23456789, 1.24556789), (False, 1, 1))

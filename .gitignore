@@ -1,3 +1,9 @@
+# vscode & python
 .vscode/*
-example_data/*
 **/__pycache__/*
+
+# local environment
+.env
+tmp/*
+example_data/*
+notes.md

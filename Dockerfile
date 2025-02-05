@@ -19,6 +19,7 @@ WORKDIR /app
 RUN apt update && apt install -y --no-install-recommends \  
   wget \
   curl \
+  ca-certificates \
   jq \
   gcc \
   unzip \
@@ -32,18 +33,19 @@ RUN apt update && apt install -y --no-install-recommends \
   plastimatch \
   && rm -rf /var/lib/apt/lists/* 
 
-# Install Python dependencies
-RUN pip3 install --upgrade pip && pip3 install --no-cache-dir \
-  typing-extensions \
-  numpy \
-  pandas \ 
-  PyYAML \
-  pyplastimatch \
-  pydicom \
-  pydicom-seg \
-  SimpleITK==2.2.1
+# Install uv (https://docs.astral.sh/uv/guides/integration/docker/#installing-uv)
+# COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
 
-# copy source code
-COPY ./src /app/src
 
-ENTRYPOINT ["python3", "/app/src/main.py"]
+# copy source code and pyproject files
+COPY ./medcmp /app/medcmp
+COPY uv.lock pyproject.toml README.md /app/
+
+# setup python environment
+RUN uv sync
+
+# set the entrypoint to run medcmp
+ENTRYPOINT ["uv", "run", "medcmp"]
